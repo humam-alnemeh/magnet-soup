@@ -5,148 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Magnet Soup</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #08080c;
-    overflow: hidden;
-    cursor: none;
-    touch-action: none;
-    font-family: 'Space Mono', monospace;
-  }
-  canvas { display: block; }
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #08080c; overflow: hidden; cursor: none; touch-action: none; font-family: 'Space Mono', monospace; }
+canvas { display: block; }
+#controls {
+  position: fixed; top: 16px; left: 16px; z-index: 20;
+  color: rgba(255,255,255,0.25); font-size: 10px; letter-spacing: 0.5px;
+  line-height: 2; pointer-events: none; transition: opacity 0.5s;
+}
+@media (max-width: 600px) { #controls { display: none; } }
+#controls .key {
+  display: inline-block; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 3px;
+  padding: 1px 6px; font-size: 9px; color: rgba(255,255,255,0.35);
+  margin-right: 2px; vertical-align: middle;
+}
+#controls .section {
+  color: rgba(255,255,255,0.12); font-size: 8px; text-transform: uppercase;
+  letter-spacing: 2px; margin-top: 6px; margin-bottom: 2px;
+}
+#stats-panel {
+  position: fixed; top: 16px; right: 16px; z-index: 20;
+  color: rgba(255,255,255,0.18); font-size: 10px; letter-spacing: 0.5px;
+  text-align: right; line-height: 1.8; pointer-events: none;
+}
+#ui {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,0.15); font-size: 11px; letter-spacing: 1px;
+  z-index: 10; text-align: center; pointer-events: none;
+}
+#charge-wrap {
+  position: fixed; bottom: 42px; left: 50%; transform: translateX(-50%);
+  width: 200px; height: 3px; background: rgba(255,255,255,0.05);
+  border-radius: 3px; z-index: 10; opacity: 0; transition: opacity 0.3s;
+}
+#charge-bar { height: 100%; width: 0%; border-radius: 3px; background: linear-gradient(90deg, #4af, #f4a, #ff4); }
+#hint {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 10; pointer-events: none; text-align: center; transition: opacity 2s;
+}
+#hint h1 { color: rgba(255,255,255,0.06); font: 800 46px sans-serif; letter-spacing: 8px; text-transform: uppercase; margin-bottom: 8px; }
+#hint p { color: rgba(255,255,255,0.09); font-size: 12px; letter-spacing: 1px; }
 
-  #controls {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 20;
-    color: rgba(255,255,255,0.25);
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    line-height: 2;
-    pointer-events: none;
-    transition: opacity 0.5s;
-  }
-  #controls .key {
-    display: inline-block;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 3px;
-    padding: 1px 6px;
-    font-size: 9px;
-    color: rgba(255,255,255,0.35);
-    margin-right: 2px;
-    vertical-align: middle;
-  }
-  #controls .section {
-    color: rgba(255,255,255,0.12);
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 6px;
-    margin-bottom: 2px;
-  }
+/* ── Mobile Action Buttons ── */
+#mobile-btns {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+  max-width: 420px;
+  pointer-events: auto;
+}
+@media (hover: hover) and (pointer: fine) {
+  /* desktop: hide mobile buttons */
+  #mobile-btns { display: none !important; }
+}
+.mbtn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.6);
+  font: 11px 'Space Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 9px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+.mbtn:active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+}
+.mbtn.danger { border-color: rgba(255,80,80,0.25); color: rgba(255,120,120,0.7); }
+.mbtn.danger:active { background: rgba(255,60,60,0.2); color: #ff8888; }
 
-  #stats-panel {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 20;
-    color: rgba(255,255,255,0.18);
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    text-align: right;
-    line-height: 1.8;
-    pointer-events: none;
-  }
-
-  #ui {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.15);
-    font-size: 11px;
-    letter-spacing: 1px;
-    z-index: 10;
-    text-align: center;
-    pointer-events: none;
-  }
-
-  #charge-wrap {
-    position: fixed;
-    bottom: 42px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 3px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 3px;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  #charge-bar {
-    height: 100%;
-    width: 0%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, #4af, #f4a, #ff4);
-  }
-
-  #hint {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    pointer-events: none;
-    text-align: center;
-    transition: opacity 2s;
-  }
-  #hint h1 {
-    color: rgba(255,255,255,0.06);
-    font: 800 46px sans-serif;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  #hint p {
-    color: rgba(255,255,255,0.09);
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-
-  #reset-btn {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 20;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.2);
-    font: 10px 'Space Mono', monospace;
-    letter-spacing: 1px;
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  #reset-btn:hover {
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.4);
-    border-color: rgba(255,255,255,0.15);
-  }
+#reset-btn {
+  position: fixed; bottom: 16px; right: 16px; z-index: 20;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.2); font: 10px 'Space Mono', monospace;
+  letter-spacing: 1px; padding: 6px 14px; border-radius: 4px;
+  cursor: pointer; transition: all 0.2s;
+}
+@media (max-width: 600px) { #reset-btn { display: none; } }
+#reset-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.15); }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-
 <div id="hint">
   <h1>Magnet Soup</h1>
-  <p>move your mouse to begin</p>
+  <p id="hint-sub">move your mouse to begin</p>
 </div>
-
 <div id="controls">
   <div class="section">mouse</div>
   <span class="key">Move</span> attract particles<br>
@@ -163,31 +123,44 @@
   <span class="key">X</span> clear wells<br>
   <span class="key">Esc</span> reset
 </div>
-
 <div id="stats-panel"></div>
 <div id="charge-wrap"><div id="charge-bar"></div></div>
 <div id="ui">attract</div>
-<button id="reset-btn" onclick="resetGame()">↻ RESET</button>
+
+<!-- Mobile buttons -->
+<div id="mobile-btns">
+  <button class="mbtn" id="btn-supernova" ontouchstart="doSupernova();return false;">&#9733; SUPERNOVA</button>
+  <button class="mbtn" id="btn-scatter"   ontouchstart="doScatter();return false;">&#10040; SCATTER</button>
+  <button class="mbtn" id="btn-well"      ontouchstart="doWell();return false;">&#9899; GRAVITY WELL</button>
+  <button class="mbtn" id="btn-color"     ontouchstart="doColorShift();return false;">&#9676; COLOR SHIFT</button>
+  <button class="mbtn" id="btn-clear"     ontouchstart="doClearWells();return false;">&#10005; CLEAR WELLS</button>
+  <button class="mbtn danger" id="btn-reset" ontouchstart="resetGame();return false;">&#8635; RESET</button>
+</div>
+
+<button id="reset-btn" onclick="resetGame()">&#8635; RESET</button>
 
 <script>
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 var hint = document.getElementById('hint');
+var hintSub = document.getElementById('hint-sub');
 var uiLabel = document.getElementById('ui');
 var chargeWrap = document.getElementById('charge-wrap');
 var chargeBarEl = document.getElementById('charge-bar');
 var statsPanel = document.getElementById('stats-panel');
-
 var W, H;
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
 resize();
 window.addEventListener('resize', resize);
 
+// Detect touch device and update hint
+var isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+if (isTouchDevice) {
+  hintSub.textContent = 'touch & drag to begin';
+}
+
 // =============================================
-//  STATE
+// STATE
 // =============================================
 var mx = W / 2, my = H / 2, mouseOn = false;
 var holding = false;
@@ -200,21 +173,19 @@ var flash = 0;
 var flashHue = 0;
 var frameN = 0;
 var hintShown = true;
-
 var clickTimes = [];
 var wells = [];
 var rings = [];
 var comboText = '', comboLife = 0, comboHue = 0;
 
 // =============================================
-//  PARTICLE SYSTEM — growable
+// PARTICLE SYSTEM
 // =============================================
-var MAX_N = 2500;  // max capacity
-var N = 0;         // current active count
-var START_N = 600; // initial particles
-var GROW_RATE = 2; // particles added per second
+var MAX_N = 2500;
+var N = 0;
+var START_N = 600;
+var GROW_RATE = 2;
 var growTimer = 0;
-
 var xs = new Float64Array(MAX_N);
 var ys = new Float64Array(MAX_N);
 var vxs = new Float64Array(MAX_N);
@@ -230,101 +201,66 @@ var frics = new Float64Array(MAX_N);
 var attrs = new Float64Array(MAX_N);
 var energy = new Float64Array(MAX_N);
 var catIds = new Uint8Array(MAX_N);
-
 var CATS = [
-  { name:'heavy',  w:0.12, sMin:5, sMax:10, hMin:5,   hMax:40,  sat:75, lit:58, alpha:0.75, mass:1.5, fric:0.96,  attr:3.0 },
-  { name:'medium', w:0.25, sMin:3, sMax:6,  hMin:260, hMax:310, sat:65, lit:52, alpha:0.60, mass:1.0, fric:0.97,  attr:1.5 },
-  { name:'light',  w:0.35, sMin:2, sMax:4,  hMin:185, hMax:220, sat:70, lit:56, alpha:0.50, mass:0.5, fric:0.982, attr:0.6 },
-  { name:'tiny',   w:0.28, sMin:1, sMax:2.5,hMin:100, hMax:155, sat:55, lit:50, alpha:0.40, mass:0.2, fric:0.991, attr:0.25},
+  { name:'heavy',  w:0.12, sMin:5,   sMax:10,  hMin:5,   hMax:40,  sat:75, lit:58, alpha:0.75, mass:1.5, fric:0.96,  attr:3.0  },
+  { name:'medium', w:0.25, sMin:3,   sMax:6,   hMin:260, hMax:310, sat:65, lit:52, alpha:0.60, mass:1.0, fric:0.97,  attr:1.5  },
+  { name:'light',  w:0.35, sMin:2,   sMax:4,   hMin:185, hMax:220, sat:70, lit:56, alpha:0.50, mass:0.5, fric:0.982, attr:0.6  },
+  { name:'tiny',   w:0.28, sMin:1,   sMax:2.5, hMin:100, hMax:155, sat:55, lit:50, alpha:0.40, mass:0.2, fric:0.991, attr:0.25 },
 ];
-
 function pickCategory() {
-  var r = Math.random();
-  var cum = 0;
-  for (var i = 0; i < CATS.length; i++) {
-    cum += CATS[i].w;
-    if (r < cum) return i;
-  }
+  var r = Math.random(), cum = 0;
+  for (var i = 0; i < CATS.length; i++) { cum += CATS[i].w; if (r < cum) return i; }
   return CATS.length - 1;
 }
-
 function spawnParticle(x, y) {
   if (N >= MAX_N) return;
-  var ci = pickCategory();
-  var cat = CATS[ci];
-  var idx = N;
+  var ci = pickCategory(), cat = CATS[ci], idx = N;
   xs[idx] = x !== undefined ? x : Math.random() * W;
   ys[idx] = y !== undefined ? y : Math.random() * H;
   vxs[idx] = (Math.random() - 0.5) * 0.5;
   vys[idx] = (Math.random() - 0.5) * 0.5;
   var sz = cat.sMin + Math.random() * (cat.sMax - cat.sMin);
-  sizes[idx] = sz;
-  baseSizes[idx] = sz;
+  sizes[idx] = sz; baseSizes[idx] = sz;
   hues[idx] = cat.hMin + Math.random() * (cat.hMax - cat.hMin);
   sats[idx] = cat.sat + (Math.random() - 0.5) * 10;
   lits[idx] = cat.lit + (Math.random() - 0.5) * 8;
-  alphas[idx] = cat.alpha;
-  masses[idx] = cat.mass;
-  frics[idx] = cat.fric;
-  attrs[idx] = cat.attr;
-  energy[idx] = 0;
-  catIds[idx] = ci;
-  N++;
+  alphas[idx] = cat.alpha; masses[idx] = cat.mass; frics[idx] = cat.fric;
+  attrs[idx] = cat.attr; energy[idx] = 0; catIds[idx] = ci; N++;
 }
-
-function initParticles(count) {
-  N = 0;
-  for (var i = 0; i < count; i++) spawnParticle();
-}
-
+function initParticles(count) { N = 0; for (var i = 0; i < count; i++) spawnParticle(); }
 initParticles(START_N);
 
 // =============================================
-//  RESET
+// RESET
 // =============================================
 function resetGame() {
-  N = 0;
-  wells = [];
-  rings = [];
-  charge = 0;
-  spin = 0;
-  hueShift = 0;
-  shake = 0;
-  flash = 0;
-  clickTimes = [];
-  comboText = '';
-  comboLife = 0;
-  frameN = 0;
-  growTimer = 0;
-  // Clear canvas
-  ctx.fillStyle = '#08080c';
-  ctx.fillRect(0, 0, W, H);
-  // Re-init
+  N = 0; wells = []; rings = []; charge = 0; spin = 0; hueShift = 0;
+  shake = 0; flash = 0; clickTimes = []; comboText = ''; comboLife = 0;
+  frameN = 0; growTimer = 0;
+  ctx.fillStyle = '#08080c'; ctx.fillRect(0, 0, W, H);
   initParticles(START_N);
 }
 
 // =============================================
-//  HELPERS
+// HELPERS
 // =============================================
 function addRing(x, y, maxR, r, g, b, w) {
   rings.push({ x:x, y:y, r:0, maxR:maxR, cr:r, cg:g, cb:b, w:w||2, a:1 });
 }
-
 function pushFrom(ox, oy, radius, force) {
   for (var i = 0; i < N; i++) {
     var dx = xs[i]-ox, dy = ys[i]-oy;
     var d = Math.sqrt(dx*dx+dy*dy)+1;
     if (d < radius) {
       var f = force*(1-d/radius)/(masses[i]+0.1);
-      vxs[i] += (dx/d)*f;
-      vys[i] += (dy/d)*f;
+      vxs[i] += (dx/d)*f; vys[i] += (dy/d)*f;
       energy[i] = Math.min(1, energy[i]+0.4);
     }
   }
 }
 
 // =============================================
-//  COMBO
+// COMBO
 // =============================================
 function registerClick() {
   var now = performance.now();
@@ -332,51 +268,37 @@ function registerClick() {
   clickTimes = clickTimes.filter(function(t) { return now - t < 800; });
   var n = clickTimes.length;
   comboLife = 60;
-
-  if (n === 1) {
-    pushFrom(mx, my, 140, 3);
-    addRing(mx, my, 130, 150, 200, 255, 1.5);
-    comboText = '';
-  } else if (n === 2) {
-    pushFrom(mx, my, 220, 6);
-    addRing(mx, my, 220, 100, 200, 255, 2);
-    comboText = 'RIPPLE'; comboHue = 200;
-  } else if (n === 3) {
-    pushFrom(mx, my, 380, 11);
-    addRing(mx, my, 350, 255, 180, 100, 3);
-    addRing(mx, my, 250, 255, 220, 150, 1.5);
-    comboText = 'SHOCKWAVE'; comboHue = 30;
-    shake = 10;
-  } else if (n === 4) {
-    pushFrom(mx, my, 550, 16);
-    addRing(mx, my, 500, 255, 100, 200, 3);
-    addRing(mx, my, 400, 255, 150, 220, 2);
-    addRing(mx, my, 300, 255, 200, 240, 1);
-    comboText = 'TSUNAMI'; comboHue = 320;
-    shake = 18; flash = 0.3; flashHue = 320;
-  } else if (n >= 5) {
-    doSupernova();
-  }
+  if (n === 1) { pushFrom(mx, my, 140, 3); addRing(mx, my, 130, 150, 200, 255, 1.5); comboText = ''; }
+  else if (n === 2) { pushFrom(mx, my, 220, 6); addRing(mx, my, 220, 100, 200, 255, 2); comboText = 'RIPPLE'; comboHue = 200; }
+  else if (n === 3) { pushFrom(mx, my, 380, 11); addRing(mx, my, 350, 255, 180, 100, 3); addRing(mx, my, 250, 255, 220, 150, 1.5); comboText = 'SHOCKWAVE'; comboHue = 30; shake = 10; }
+  else if (n === 4) { pushFrom(mx, my, 550, 16); addRing(mx, my, 500, 255, 100, 200, 3); addRing(mx, my, 400, 255, 150, 220, 2); addRing(mx, my, 300, 255, 200, 240, 1); comboText = 'TSUNAMI'; comboHue = 320; shake = 18; flash = 0.3; flashHue = 320; }
+  else if (n >= 5) { doSupernova(); }
 }
 
 function doSupernova() {
-  comboText = 'SUPERNOVA'; comboHue = 50; comboLife = 80;
-  shake = 30; flash = 0.85; flashHue = 50;
+  comboText = 'SUPERNOVA'; comboHue = 50; comboLife = 80; shake = 30; flash = 0.85; flashHue = 50;
   for (var i = 0; i < N; i++) {
     var dx = xs[i]-mx, dy = ys[i]-my;
     var d = Math.sqrt(dx*dx+dy*dy)+1;
-    vxs[i] += (dx/d)*25/(masses[i]+0.1);
-    vys[i] += (dy/d)*25/(masses[i]+0.1);
-    energy[i] = 1;
-    lits[i] = 90;
+    vxs[i] += (dx/d)*25/(masses[i]+0.1); vys[i] += (dy/d)*25/(masses[i]+0.1);
+    energy[i] = 1; lits[i] = 90;
   }
   for (var k = 0; k < 5; k++) addRing(mx, my, 350+k*120, 255, 240, 200, 3-k*0.5);
-  hueShift += 55;
-  clickTimes = [];
+  hueShift += 55; clickTimes = [];
 }
+function doScatter() {
+  for (var i = 0; i < N; i++) { vxs[i] = (Math.random()-0.5)*14; vys[i] = (Math.random()-0.5)*14; energy[i] = 0.4; }
+  shake = 5;
+}
+function doWell() {
+  wells.push({ x:mx, y:my, s:3.5, r:140, life:1, hue:(250+Math.random()*80)|0 });
+  if (wells.length > 5) wells.shift();
+}
+function doColorShift() { hueShift = (hueShift+50)%360; }
+function doClearWells() { wells = []; }
 
 // =============================================
-//  CHARGE / RELEASE
+// CHARGE / RELEASE
 // =============================================
 function releaseCharge() {
   if (charge < 0.1) { charge = 0; spin *= 0.3; return; }
@@ -388,88 +310,52 @@ function releaseCharge() {
     var d = Math.sqrt(dx*dx+dy*dy)+1;
     if (d < rr) {
       var f = rf*(1-d/rr)/(masses[i]+0.1);
-      vxs[i] += (dx/d)*f*0.6;
-      vys[i] += (dy/d)*f*0.6;
+      vxs[i] += (dx/d)*f*0.6; vys[i] += (dy/d)*f*0.6;
       var dir = spin >= 0 ? 1 : -1;
-      vxs[i] += (-dy/d)*f*0.4*dir;
-      vys[i] += (dx/d)*f*0.4*dir;
+      vxs[i] += (-dy/d)*f*0.4*dir; vys[i] += (dx/d)*f*0.4*dir;
       energy[i] = Math.min(1, energy[i]+intensity*0.5);
     }
   }
-  if (intensity > 0.5) {
-    shake = 12*intensity;
-    flash = 0.3*intensity;
-    flashHue = (hueShift+200)%360;
-    addRing(mx, my, rr, 200, 230, 255, 3);
-  }
-  charge = 0;
-  spin *= 0.2;
+  if (intensity > 0.5) { shake = 12*intensity; flash = 0.3*intensity; flashHue = (hueShift+200)%360; addRing(mx, my, rr, 200, 230, 255, 3); }
+  charge = 0; spin *= 0.2;
 }
 
 // =============================================
-//  UPDATE
+// UPDATE
 // =============================================
 function update() {
   var captured = 0;
-
-  // Grow particles over time
   growTimer++;
   if (growTimer % Math.round(60 / GROW_RATE) === 0 && N < MAX_N) {
-    // Spawn at random edge
-    var edge = Math.random();
-    var sx, sy;
+    var edge = Math.random(), sx, sy;
     if (edge < 0.25) { sx = 0; sy = Math.random()*H; }
     else if (edge < 0.5) { sx = W; sy = Math.random()*H; }
     else if (edge < 0.75) { sx = Math.random()*W; sy = 0; }
     else { sx = Math.random()*W; sy = H; }
     spawnParticle(sx, sy);
   }
-
   for (var i = 0; i < N; i++) {
-    vxs[i] += (Math.random()-0.5)*0.02;
-    vys[i] += (Math.random()-0.5)*0.02;
-
+    vxs[i] += (Math.random()-0.5)*0.02; vys[i] += (Math.random()-0.5)*0.02;
     if (mouseOn) {
       var dx = mx-xs[i], dy = my-ys[i];
       var d = Math.sqrt(dx*dx+dy*dy)+0.5;
       var nx = dx/d, ny = dy/d;
-
-      // Long-range pull
       var pull = attrs[i]*0.3/(d*0.005+1);
       if (pull > 1.8) pull = 1.8;
-      vxs[i] += nx*pull;
-      vys[i] += ny*pull;
-
-      // Close-range pull
+      vxs[i] += nx*pull; vys[i] += ny*pull;
       if (d < magnetR*2.5) {
         var near = attrs[i]*0.25*magnetR/d/(masses[i]+0.1);
         if (near > (holding ? 4 : 2.5)) near = holding ? 4 : 2.5;
-        vxs[i] += nx*near;
-        vys[i] += ny*near;
+        vxs[i] += nx*near; vys[i] += ny*near;
       }
-
-      // Anti-stick repulsion
-      if (d < 25) {
-        var rep = 1.5*(25-d)/25;
-        vxs[i] -= nx*rep;
-        vys[i] -= ny*rep;
-      }
-
-      // Inside field: orbit + capture
+      if (d < 25) { var rep = 1.5*(25-d)/25; vxs[i] -= nx*rep; vys[i] -= ny*rep; }
       if (d < magnetR) {
         captured++;
         var orbF = (0.04 + spin*0.08)/(masses[i]+0.1);
-        vxs[i] += (-ny)*orbF;
-        vys[i] += (nx)*orbF;
-        if (holding && d > 30) {
-          var tight = 0.06*attrs[i]/(masses[i]+0.1);
-          vxs[i] += nx*tight;
-          vys[i] += ny*tight;
-        }
+        vxs[i] += (-ny)*orbF; vys[i] += (nx)*orbF;
+        if (holding && d > 30) { var tight = 0.06*attrs[i]/(masses[i]+0.1); vxs[i] += nx*tight; vys[i] += ny*tight; }
       }
     }
-
-    // Gravity wells
     for (var w = 0; w < wells.length; w++) {
       var well = wells[w];
       var wdx = well.x-xs[i], wdy = well.y-ys[i];
@@ -477,99 +363,57 @@ function update() {
       if (wd < well.r*3) {
         var wf = well.s*attrs[i]*well.r/wd*well.life/(masses[i]+0.1);
         if (wf > 3.5) wf = 3.5;
-        vxs[i] += (wdx/wd)*wf;
-        vys[i] += (wdy/wd)*wf;
-        if (wd < well.r) {
-          vxs[i] += (-wdy/wd)*0.04;
-          vys[i] += (wdx/wd)*0.04;
-        }
+        vxs[i] += (wdx/wd)*wf; vys[i] += (wdy/wd)*wf;
+        if (wd < well.r) { vxs[i] += (-wdy/wd)*0.04; vys[i] += (wdx/wd)*0.04; }
       }
     }
-
-    xs[i] += vxs[i];
-    ys[i] += vys[i];
-    vxs[i] *= frics[i];
-    vys[i] *= frics[i];
-
-    // NaN check
+    xs[i] += vxs[i]; ys[i] += vys[i];
+    vxs[i] *= frics[i]; vys[i] *= frics[i];
     if (xs[i] !== xs[i]) { xs[i] = Math.random()*W; vxs[i] = 0; }
     if (ys[i] !== ys[i]) { ys[i] = Math.random()*H; vys[i] = 0; }
-
-    // Walls
     if (xs[i] < 2) { xs[i] = 2; vxs[i] *= -0.3; }
     if (xs[i] > W-2) { xs[i] = W-2; vxs[i] *= -0.3; }
     if (ys[i] < 2) { ys[i] = 2; vys[i] *= -0.3; }
     if (ys[i] > H-2) { ys[i] = H-2; vys[i] *= -0.3; }
-
     var spd = Math.sqrt(vxs[i]*vxs[i]+vys[i]*vys[i]);
     sizes[i] = baseSizes[i] + spd*0.2 + energy[i]*2;
-
     energy[i] *= 0.993;
     var baseLit = CATS[catIds[i]].lit;
     if (lits[i] > baseLit+3) lits[i] -= 0.2;
     var baseSat = CATS[catIds[i]].sat;
     if (sats[i] < baseSat-3) sats[i] += 0.1;
   }
-
-  // Charge
   var ratio = captured / Math.max(N, 1);
-  if (holding) {
-    charge = Math.min(1, charge + ratio*0.018 + 0.003);
-    spin = Math.min(4, spin + charge*0.022);
-  } else {
-    charge *= 0.93;
-    spin *= 0.95;
-  }
-
-  // Wells
-  for (var w = wells.length-1; w >= 0; w--) {
-    wells[w].life -= 0.0008;
-    if (wells[w].life <= 0) wells.splice(w, 1);
-  }
-
-  // Rings
-  for (var r = rings.length-1; r >= 0; r--) {
-    rings[r].r += 7;
-    rings[r].a *= 0.93;
-    if (rings[r].a < 0.005 || rings[r].r > rings[r].maxR) rings.splice(r, 1);
-  }
-
+  if (holding) { charge = Math.min(1, charge + ratio*0.018 + 0.003); spin = Math.min(4, spin + charge*0.022); }
+  else { charge *= 0.93; spin *= 0.95; }
+  for (var w = wells.length-1; w >= 0; w--) { wells[w].life -= 0.0008; if (wells[w].life <= 0) wells.splice(w, 1); }
+  for (var r = rings.length-1; r >= 0; r--) { rings[r].r += 7; rings[r].a *= 0.93; if (rings[r].a < 0.005 || rings[r].r > rings[r].maxR) rings.splice(r, 1); }
   if (shake > 0.1) shake *= 0.88; else shake = 0;
   if (flash > 0.005) flash *= 0.85; else flash = 0;
   if (comboLife > 0) comboLife--;
 }
 
 // =============================================
-//  DRAW
+// DRAW
 // =============================================
 function draw() {
-  ctx.fillStyle = 'rgba(8,8,12,0.22)';
-  ctx.fillRect(0, 0, W, H);
-
+  ctx.fillStyle = 'rgba(8,8,12,0.22)'; ctx.fillRect(0, 0, W, H);
   ctx.save();
   if (shake > 0.5) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
-
-  // Connections (light particles)
   var cOff = 0;
-  for (var ci = 0; ci < 2; ci++) cOff += Math.round(CATS[ci].w * N); // skip heavy+medium
+  for (var ci = 0; ci < 2; ci++) cOff += Math.round(CATS[ci].w * N);
   var cEnd = Math.min(cOff + 180, N);
   ctx.lineWidth = 0.4;
   for (var i = cOff; i < cEnd; i++) {
     for (var j = i+1; j < Math.min(i+5, cEnd); j++) {
       var ddx = xs[i]-xs[j], ddy = ys[i]-ys[j];
       var dd = ddx*ddx + ddy*ddy;
-      if (dd < 1200) {
-        ctx.strokeStyle = 'rgba(255,255,255,' + ((1-dd/1200)*0.06).toFixed(3) + ')';
-        ctx.beginPath(); ctx.moveTo(xs[i], ys[i]); ctx.lineTo(xs[j], ys[j]); ctx.stroke();
-      }
+      if (dd < 1200) { ctx.strokeStyle = 'rgba(255,255,255,' + ((1-dd/1200)*0.06).toFixed(3) + ')'; ctx.beginPath(); ctx.moveTo(xs[i], ys[i]); ctx.lineTo(xs[j], ys[j]); ctx.stroke(); }
     }
   }
-
-  // Particles
   for (var i = 0; i < N; i++) {
     var x = xs[i], y = ys[i];
     if (x !== x || y !== y) continue;
-
     var spd = Math.sqrt(vxs[i]*vxs[i]+vys[i]*vys[i]);
     var en = energy[i];
     var h = ((hues[i]+hueShift+spd*3)%360)|0;
@@ -577,207 +421,100 @@ function draw() {
     var l = (lits[i]+en*22)|0;
     var a = Math.min(0.92, alphas[i]+spd*0.02+en*0.25);
     var sz = sizes[i];
-
-    if (spd > 1.8 || en > 0.2) {
-      ctx.beginPath();
-      ctx.arc(x, y, sz*2.5, 0, 6.283);
-      ctx.fillStyle = 'hsla('+h+','+s+'%,'+l+'%,'+(a*0.1).toFixed(3)+')';
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    ctx.arc(x, y, sz, 0, 6.283);
-    ctx.fillStyle = 'hsla('+h+','+s+'%,'+l+'%,'+a.toFixed(2)+')';
-    ctx.fill();
-
-    if (sz > 4) {
-      ctx.beginPath();
-      ctx.arc(x, y, sz*0.3, 0, 6.283);
-      ctx.fillStyle = 'hsla('+h+',50%,88%,'+(a*0.4).toFixed(2)+')';
-      ctx.fill();
-    }
+    if (spd > 1.8 || en > 0.2) { ctx.beginPath(); ctx.arc(x, y, sz*2.5, 0, 6.283); ctx.fillStyle = 'hsla('+h+','+s+'%,'+l+'%,'+(a*0.1).toFixed(3)+')'; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(x, y, sz, 0, 6.283); ctx.fillStyle = 'hsla('+h+','+s+'%,'+l+'%,'+a.toFixed(2)+')'; ctx.fill();
+    if (sz > 4) { ctx.beginPath(); ctx.arc(x, y, sz*0.3, 0, 6.283); ctx.fillStyle = 'hsla('+h+',50%,88%,'+(a*0.4).toFixed(2)+')'; ctx.fill(); }
   }
-
-  // Wells
   for (var w = 0; w < wells.length; w++) {
-    var well = wells[w];
-    var wa = well.life*0.4;
-    ctx.beginPath();
-    ctx.arc(well.x, well.y, well.r, 0, 6.283);
-    ctx.strokeStyle = 'hsla('+well.hue+',50%,50%,'+(wa*0.15).toFixed(3)+')';
-    ctx.lineWidth = 1; ctx.stroke();
+    var well = wells[w], wa = well.life*0.4;
+    ctx.beginPath(); ctx.arc(well.x, well.y, well.r, 0, 6.283);
+    ctx.strokeStyle = 'hsla('+well.hue+',50%,50%,'+(wa*0.15).toFixed(3)+')'; ctx.lineWidth = 1; ctx.stroke();
     var wg = ctx.createRadialGradient(well.x, well.y, 0, well.x, well.y, 25);
-    wg.addColorStop(0, 'hsla('+well.hue+',60%,60%,'+(wa*0.35).toFixed(3)+')');
-    wg.addColorStop(1, 'transparent');
-    ctx.fillStyle = wg;
-    ctx.beginPath(); ctx.arc(well.x, well.y, 25, 0, 6.283); ctx.fill();
+    wg.addColorStop(0, 'hsla('+well.hue+',60%,60%,'+(wa*0.35).toFixed(3)+')'); wg.addColorStop(1, 'transparent');
+    ctx.fillStyle = wg; ctx.beginPath(); ctx.arc(well.x, well.y, 25, 0, 6.283); ctx.fill();
   }
-
-  // Rings
   for (var r = 0; r < rings.length; r++) {
-    var rn = rings[r];
-    ctx.beginPath();
-    ctx.arc(rn.x, rn.y, rn.r, 0, 6.283);
-    ctx.strokeStyle = 'rgba('+rn.cr+','+rn.cg+','+rn.cb+','+rn.a.toFixed(3)+')';
-    ctx.lineWidth = rn.w; ctx.stroke();
+    var rn = rings[r]; ctx.beginPath(); ctx.arc(rn.x, rn.y, rn.r, 0, 6.283);
+    ctx.strokeStyle = 'rgba('+rn.cr+','+rn.cg+','+rn.cb+','+rn.a.toFixed(3)+')'; ctx.lineWidth = rn.w; ctx.stroke();
   }
-
-  // Charge field
   if (holding && charge > 0.03) {
-    ctx.beginPath();
-    ctx.arc(mx, my, magnetR*(1+charge*0.2), 0, 6.283);
-    ctx.strokeStyle = 'rgba(130,200,255,'+(charge*0.15).toFixed(3)+')';
-    ctx.lineWidth = 1+charge*2; ctx.stroke();
-
-    ctx.save();
-    ctx.translate(mx, my);
-    ctx.rotate(frameN * spin * 0.015);
+    ctx.beginPath(); ctx.arc(mx, my, magnetR*(1+charge*0.2), 0, 6.283);
+    ctx.strokeStyle = 'rgba(130,200,255,'+(charge*0.15).toFixed(3)+')'; ctx.lineWidth = 1+charge*2; ctx.stroke();
+    ctx.save(); ctx.translate(mx, my); ctx.rotate(frameN * spin * 0.015);
     var nL = (3+charge*4)|0;
-    for (var ln = 0; ln < nL; ln++) {
-      ctx.rotate(6.283/nL);
-      ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(magnetR*0.6*charge, 0);
-      ctx.strokeStyle = 'rgba(160,210,255,'+(charge*0.1).toFixed(3)+')';
-      ctx.lineWidth = 0.5; ctx.stroke();
-    }
+    for (var ln = 0; ln < nL; ln++) { ctx.rotate(6.283/nL); ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(magnetR*0.6*charge, 0); ctx.strokeStyle = 'rgba(160,210,255,'+(charge*0.1).toFixed(3)+')'; ctx.lineWidth = 0.5; ctx.stroke(); }
     ctx.restore();
   }
-
-  // Flash
-  if (flash > 0.008) {
-    ctx.fillStyle = 'hsla('+(flashHue|0)+',80%,70%,'+flash.toFixed(3)+')';
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  // Combo text
+  if (flash > 0.008) { ctx.fillStyle = 'hsla('+(flashHue|0)+',80%,70%,'+flash.toFixed(3)+')'; ctx.fillRect(0, 0, W, H); }
   if (comboLife > 0 && comboText) {
     var ca = comboLife / 60;
-    ctx.save();
-    ctx.globalAlpha = ca;
-    ctx.font = '800 '+((50+(1-ca)*20)|0)+'px sans-serif';
+    ctx.save(); ctx.globalAlpha = ca; ctx.font = '800 '+((50+(1-ca)*20)|0)+'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'hsla('+((comboHue+hueShift)|0)+',80%,60%,0.5)';
-    ctx.shadowBlur = 30;
+    ctx.shadowColor = 'hsla('+((comboHue+hueShift)|0)+',80%,60%,0.5)'; ctx.shadowBlur = 30;
     ctx.fillStyle = 'hsla('+((comboHue+hueShift)|0)+',80%,72%,'+ca.toFixed(2)+')';
-    ctx.fillText(comboText, W/2, H/2);
-    ctx.restore();
+    ctx.fillText(comboText, W/2, H/2); ctx.restore();
   }
-
-  // Cursor
-  ctx.beginPath();
-  ctx.arc(mx, my, 3, 0, 6.283);
-  ctx.fillStyle = 'white';
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(mx, my, 3, 0, 6.283); ctx.fillStyle = 'white'; ctx.fill();
   var curR = magnetR*0.15+12+(holding ? charge*10 : 0);
-  ctx.beginPath();
-  ctx.arc(mx, my, curR, 0, 6.283);
-  if (holding) {
-    var br = 50+charge*50;
-    ctx.strokeStyle = 'hsla('+((200+hueShift)|0)+',80%,'+br+'%,'+(0.4+charge*0.4).toFixed(2)+')';
-  } else {
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  }
-  ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  ctx.restore();
-
-  // UI
-  if (charge > 0.04) {
-    chargeWrap.style.opacity = '0.7';
-    chargeBarEl.style.width = (charge*100)+'%';
-  } else {
-    chargeWrap.style.opacity = '0';
-  }
-  if (holding) {
-    uiLabel.textContent = charge > 0.7 ? '◉ RELEASE!' : 'charging...';
-    uiLabel.style.color = charge > 0.7 ? 'rgba(255,200,100,0.5)' : 'rgba(150,200,255,0.25)';
-  } else {
-    uiLabel.textContent = 'attract';
-    uiLabel.style.color = 'rgba(255,255,255,0.12)';
-  }
-
-  // Stats
-  if (frameN % 20 === 0) {
-    statsPanel.innerHTML = N + ' / ' + MAX_N + ' particles<br>' + wells.length + ' wells';
-  }
-
-  // Hint
-  if (hintShown && mouseOn) {
-    hint.style.opacity = '0';
-    hintShown = false;
-  }
+  ctx.beginPath(); ctx.arc(mx, my, curR, 0, 6.283);
+  if (holding) { var br = 50+charge*50; ctx.strokeStyle = 'hsla('+((200+hueShift)|0)+',80%,'+br+'%,'+(0.4+charge*0.4).toFixed(2)+')'; }
+  else { ctx.strokeStyle = 'rgba(255,255,255,0.25)'; }
+  ctx.lineWidth = 1.5; ctx.stroke(); ctx.shadowBlur = 0; ctx.restore();
+  if (charge > 0.04) { chargeWrap.style.opacity = '0.7'; chargeBarEl.style.width = (charge*100)+'%'; }
+  else { chargeWrap.style.opacity = '0'; }
+  if (holding) { uiLabel.textContent = charge > 0.7 ? '◉ RELEASE!' : 'charging...'; uiLabel.style.color = charge > 0.7 ? 'rgba(255,200,100,0.5)' : 'rgba(150,200,255,0.25)'; }
+  else { uiLabel.textContent = 'attract'; uiLabel.style.color = 'rgba(255,255,255,0.12)'; }
+  if (frameN % 20 === 0) { statsPanel.innerHTML = N + ' / ' + MAX_N + ' particles<br>' + wells.length + ' wells'; }
+  if (hintShown && mouseOn) { hint.style.opacity = '0'; hintShown = false; }
 }
 
 // =============================================
-//  LOOP
+// LOOP
 // =============================================
-function loop() {
-  frameN++;
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
+function loop() { frameN++; update(); draw(); requestAnimationFrame(loop); }
 
 // =============================================
-//  INPUT
+// INPUT
 // =============================================
-document.addEventListener('mousemove', function(e) {
-  mx = e.clientX; my = e.clientY; mouseOn = true;
-});
-
+document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; mouseOn = true; });
 document.addEventListener('mousedown', function(e) {
   if (e.button === 0) { holding = true; registerClick(); }
-  if (e.button === 2) {
-    wells.push({ x:mx, y:my, s:3.5, r:140, life:1, hue:(250+Math.random()*80)|0 });
-    if (wells.length > 5) wells.shift();
-  }
+  if (e.button === 2) { doWell(); }
 });
-
-document.addEventListener('mouseup', function(e) {
-  if (e.button === 0) { holding = false; releaseCharge(); }
-});
-
+document.addEventListener('mouseup', function(e) { if (e.button === 0) { holding = false; releaseCharge(); } });
 document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
 document.addEventListener('touchstart', function(e) {
+  // Ignore if touch is on a mobile button
+  if (e.target.closest('#mobile-btns')) return;
   e.preventDefault();
-  mx = e.touches[0].clientX; my = e.touches[0].clientY; mouseOn = true;
-  holding = true; registerClick();
+  mx = e.touches[0].clientX; my = e.touches[0].clientY;
+  mouseOn = true; holding = true; registerClick();
+  if (hintShown) { hint.style.opacity = '0'; hintShown = false; }
 }, { passive: false });
-
 document.addEventListener('touchmove', function(e) {
+  if (e.target.closest('#mobile-btns')) return;
   e.preventDefault();
   mx = e.touches[0].clientX; my = e.touches[0].clientY;
 }, { passive: false });
-
 document.addEventListener('touchend', function(e) {
+  if (e.target.closest('#mobile-btns')) return;
   holding = false; releaseCharge();
 });
-
 document.addEventListener('wheel', function(e) {
   e.preventDefault();
   magnetR = Math.max(60, Math.min(350, magnetR - e.deltaY*0.3));
 }, { passive: false });
-
 document.addEventListener('keydown', function(e) {
   if (e.code === 'Space') { e.preventDefault(); doSupernova(); }
-  if (e.code === 'KeyA') {
-    for (var i = 0; i < N; i++) {
-      vxs[i] = (Math.random()-0.5)*14; vys[i] = (Math.random()-0.5)*14; energy[i] = 0.4;
-    }
-    shake = 5;
-  }
-  if (e.code === 'KeyS') {
-    wells.push({ x:mx, y:my, s:3.5, r:140, life:1, hue:(250+Math.random()*80)|0 });
-    if (wells.length > 5) wells.shift();
-  }
-  if (e.code === 'KeyD') { hueShift = (hueShift+50)%360; }
-  if (e.code === 'KeyX') { wells = []; }
-  if (e.code === 'Escape') { resetGame(); }
+  if (e.code === 'KeyA') doScatter();
+  if (e.code === 'KeyS') doWell();
+  if (e.code === 'KeyD') doColorShift();
+  if (e.code === 'KeyX') doClearWells();
+  if (e.code === 'Escape') resetGame();
 });
 
 // =============================================
-//  GO
+// GO
 // =============================================
 loop();
 </script>
